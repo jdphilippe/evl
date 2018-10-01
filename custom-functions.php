@@ -99,84 +99,62 @@ function numero_init() {
 }
 add_action( 'init', 'numero_init' );
 
+/**
+ * Affiche en HTML la couverture du numero passé en paramètre
+ *
+ * @param $numero_id
+ * @param $title
+ */
+function printCorver($numero_id, $title ) {
+    if ( $title )
+        echo $title;
+
+    $numero = get_term_by('id', $numero_id, 'numero');
+    $link   = esc_url( get_term_link((INT) $numero_id, 'numero') );
+    ?>
+    <div class="mywidget">
+        <h3><a href="<?php echo $link ?>"><strong><?php echo $numero->name; ?></strong></a></h3>
+        <p><a  href="<?php echo $link ?>"><?php echo $numero->description; ?></a></p>
+
+        <?php
+        $category_image = category_image_src( array( 'term_id' => $numero->term_id, 'size' => 'full' ), false );
+        if ( $category_image == null )
+            $category_image = "/wordpress/wp-content/uploads/2015/03/blank.jpg";
+
+        echo '<center><a href="'. $link .'"><img src="' . $category_image . '" alt="' . $numero->name . '" class="img-responsive wp-post-image numcover"></a></center>';
+
+        if ( pmpro_hasMembershipLevel() ) {
+            $fid = get_tax_meta( $numero_id, 'nb_file_field_id' );
+            echo "<center><a href='/wordpress/download.php?fid=" . $fid[0] . "&id=" . $numero_id . "'>Télécharger le PDF</a></center>";
+        } else {
+            echo "<center>Vous devez avoir un abonnement actif pour télécharger le numéro</center>";
+        } ?>
+    </div>
+    <br>
+    <?php
+}
+
 class NumeroWidget extends WP_Widget {
     function NumeroWidget()
     {
         parent::WP_Widget(false, $name = 'MW - Widget Numéros', array("description" => 'Affiche la couverture du dernier numéro'));
     }
-    function widget($args, $instance)
+
+    function widget( $args, $instance )
     {
-		 // Extraction des paramètres du widget
+        // Extraction des paramètres du widget
 		extract( $args );
-		// Récupération de chaque paramètre
-		$title = apply_filters('widget_title', $instance['title']);
-		// Voir le détail sur ces variables plus bas
-		echo $before_widget;
-		// On affiche un titre si le paramètre est rempli
-		if($title)
-			echo $before_title . $title . $after_title;
-		/* Début de notre script */
 
-		?>
+        // Récupération de chaque paramètre
+        $title = apply_filters('widget_title', $instance['title']);
 
-		<?php
+        // Récuperation du dernier numero
+        $list_num = get_terms( "numero" );
+        $current  = $list_num[ count( $list_num ) -1 ];
 
-		$args = array(
-			'orderby'            => 'name',
-			'order'              => 'DESC',
-			'taxonomy'           => 'numero',
-			'hide_empty'		   => 0
-		);
-
-		$categories = get_categories( $args );
-
-		$current = '';
-
-		for ($i=0; $current = $categories[$i];$i++){
-			if(get_tax_meta($current->term_id,'nb_date_field_id') <= date("Y-m-d"))
-				break;
-		}
-		$numeroid = $current->term_id;
-
-		//print_r ($current);
-		?>
-
-
-		<?php
-
-       $numero = get_term_by('id',$numeroid,'numero');
-
-       $link = get_term_link((INT)$numeroid,'numero');
-
-		?>
-		<div class="mywidget">
-
-        <h3><a href="<?php echo esc_url($link); ?>"><strong><?php echo $numero->name; ?></strong></a></h3>
-        <p><a href="<?php echo esc_url($link); ?>"><?php echo $numero->description; ?></a></p>
-
-        <?php
-        $term_id = $numero->term_id;
-		if( ( $category_image = category_image_src( array('term_id' => $term_id, 'size' =>  'full' )  , false ) ) != null ){
-			echo '<center><a href="'.esc_url($link).'"><img src="'.$category_image.'" alt="'.$numero->name.'" class="img-responsive wp-post-image numcover"></a></center>';
-		} else {
-			echo '<center><a href="'.esc_url($link).'"><img src="/wordpress/wp-content/uploads/2015/03/blank.jpg" alt="'.$numero->name.'" class="img-responsive wp-post-image numcover"></a></center>';
-		}
-
-		//$img_id = tip_plugin_get_terms($current->term_taxonomy_id);
-
-       /// echo "<center><a href='".esc_url($link)."'>".wp_get_attachment_image( $img_id, 'medium' )."</a></center>";
-
-		if(pmpro_hasMembershipLevel()){
-			$fid = get_tax_meta($numeroid,'nb_file_field_id');
-			print ("<center><a href='/wordpress/download.php?fid=".$fid[0]."&id=".$numeroid."'>T&eacute;l&eacute;charger le PDF</a></center>");
-		} else {
-			print ("<center>Vous devez avoir un abonnement actif pour pouvoir télécharger le numéro en PDF</center>");
-		}
-        ?>
-
-		</div>
-		<?php echo $after_widget;
+        printCorver( $current->term_id, $title );
     }
+
     function update($new_instance, $old_instance)
     {
         $instance = $old_instance;
@@ -198,7 +176,10 @@ class NumeroWidget extends WP_Widget {
 
     }
 }
-add_action('widgets_init', create_function('', 'return register_widget("NumeroWidget");'));
+//add_action('widgets_init', create_function('', 'return register_widget("NumeroWidget");'));
+add_action('widgets_init', function () {
+    return register_widget("NumeroWidget");
+});
 
 
 
@@ -208,82 +189,23 @@ class CeNumeroWidget extends WP_Widget {
     {
         parent::WP_Widget(false, $name = 'MW - Widget Ce Numéro', array("description" => 'Affiche la couverture du numéro en cours'));
     }
+
     function widget($args, $instance)
     {
-		 // Extraction des paramètres du widget
+        // Extraction des paramètres du widget
 		extract( $args );
+
 		// Récupération de chaque paramètre
 		$title = apply_filters('widget_title', $instance['title']);
 
-
-
-		$postid = get_queried_object()->ID;
-		$numeros = get_the_terms($postid,"numero");
-		if(!empty($numeros)){
-			//print_r($numeros);
-			$numero = array_pop($numeros);
-
-			$link = get_term_link((INT)$numero->term_id,'numero');
-
-
-			// Voir le détail sur ces variables plus bas
-			echo $before_widget;
-			// On affiche un titre si le paramètre est rempli
-			if($title)
-				echo $before_title . $title . $after_title;
-			/* Début de notre script */
-
-			?>
-
-			<?php
-
-			//print $numeroid;
-
-			$term_id = $numero->term_id;
-
-		   //print_r($numero);
-
-			$fid = get_tax_meta($term_id,'nb_file_field_id');
-
-			?>
-			<div class="mywidget">
-
-			<h3><strong><?php echo $numero->name; ?></strong></h3>
-			<p><?php echo $numero->description; ?></p>
-
-			<?php
-			/*$queried_object = get_queried_object();
-			//print($queried_object->ID);
-			if(is_single()){
-				$myterm = wp_get_post_terms($queried_object->ID,'numero');
-				//print_r($myterm[0]->term_taxonomy_id);
-				$img_id = tip_plugin_get_terms($myterm[0]->term_taxonomy_id);
-			} else {
-				//print($queried_object->term_taxonomy_id);
-				$img_id = tip_plugin_get_terms($queried_object->term_taxonomy_id);
-			}
-			//print_r ($img_id);*/
-
-			if( ( $category_image = category_image_src( array('term_id' => $term_id, 'size' =>  'full' )  , false ) ) != null ){
-				echo '<center><a href="'.esc_url($link).'"><img src="'.$category_image.'" alt="'.$numero->name.'" class="img-responsive wp-post-image numcover"></a></center>';
-			} else {
-				echo '<center><a href="'.esc_url($link).'"><img src="/wordpress/wp-content/uploads/2015/03/blank.jpg" alt="'.$numero->name.'" class="img-responsive wp-post-image numcover"></a></center>';
-			}
-
-
-			if((pmpro_hasMembershipLevel() )) { // || (get_tax_meta($term_id,'nb_date_field_id') < date('Y-m-d',strtotime(date("Y-m-d", mktime()) . " - 365 day")))) && intval($fid[0])>0){
-				echo "<center><a href='/wordpress/download.php?fid=".$fid[0]."&id=".$term_id."'>".wp_get_attachment_image( $img_id, 'medium' )."</a></center>";
-				print ("<center><a href='/wordpress/download.php?fid=".$fid[0]."&id=".$term_id."'>T&eacute;l&eacute;charger le PDF</a></center>");
-			} else {
-				echo "<center>".wp_get_attachment_image( $img_id, 'medium' )."</center>";
-				print ("<center>Vous devez avoir un abonnement actif pour pouvoir télécharger le numéro en PDF</center>");
-			}
-			?>
-
-			</div>
-			<?php echo $after_widget;
-		}
+		$post_id = get_queried_object()->ID;
+		$numeros = get_the_terms( $post_id, "numero");
+		if ( ! empty( $numeros )) {
+            $numero = array_pop($numeros);
+            printCorver( $numero->term_id, $title );
+        }
     }
+
     function update($new_instance, $old_instance)
     {
         $instance = $old_instance;
@@ -304,12 +226,14 @@ class CeNumeroWidget extends WP_Widget {
 			</p><?php
     }
 }
-add_action('widgets_init', create_function('', 'return register_widget("CeNumeroWidget");'));
+// add_action('widgets_init', create_function('', 'return register_widget("CeNumeroWidget");'));
+add_action('widgets_init', function () {
+    return register_widget("CeNumeroWidget");
+});
 
 
 
-
-/**
+    /**
  * Dossiers
  */
 function dossier_init() {
