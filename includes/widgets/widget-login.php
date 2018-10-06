@@ -15,6 +15,7 @@ class login_widget extends WP_Widget {
 		extract( $args );
 
 		$title = apply_filters( 'widget_title', empty( $instance['text_html_title'] ) ? '' : $instance['text_html_title'], $instance, $this->id_base );
+/* PJD, sert a rien
 		$text_code = $instance['text_code'];
 		$tran_bg = $instance['tran_bg'];
 		$center = $instance['center'];
@@ -23,7 +24,7 @@ class login_widget extends WP_Widget {
 			$center = 'style="text-align:center;"';
 		else
 			$center = '';
-
+*/
 
 			echo $before_widget;
 			echo $before_title;

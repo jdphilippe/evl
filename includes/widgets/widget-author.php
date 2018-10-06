@@ -70,7 +70,7 @@ function Author_post_widget_box(){
 	register_widget( 'author_post_widget' );
 }
 class author_post_widget extends WP_Widget {
-	function author_post_widget() {
+	function __construct() {
 		$widget_ops = array( 'classname' => 'widget_author_posts'  );
 		parent::__construct( 'author_post_widget',theme_name .' - Posts By Post Author', $widget_ops );
 	}
