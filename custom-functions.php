@@ -90,10 +90,10 @@ function numero_init() {
 		'numero',
 		'post',
 		array(
-			'label' => __( 'Numéro' ),
-			'hierarchical' => true,
-			'labels' => $labels,
-			'rewrite' => array( 'slug' => 'numero' )
+			'label'         => __( 'Numéro' ),
+			'hierarchical'  => true,
+			'labels'        => $labels,
+			'rewrite'       => array( 'slug' => 'numero' )
 		)
 	);
 }
@@ -104,8 +104,9 @@ add_action( 'init', 'numero_init' );
  *
  * @param $numero_id
  * @param $title
+ * @param $format
  */
-function printCorver($numero_id, $title ) {
+function __printCorver($numero_id, $title, $format) {
     if ( $title )
         echo $title;
 
@@ -117,7 +118,7 @@ function printCorver($numero_id, $title ) {
         <p><a  href="<?php echo $link ?>"><?php echo $numero->description; ?></a></p>
 
         <?php
-        $category_image = category_image_src( array( 'term_id' => $numero->term_id, 'size' => 'full' ), false );
+        $category_image = category_image_src( array( 'term_id' => $numero->term_id, 'size' => "$format" ), false );
         if ( $category_image == null )
             $category_image = "/wordpress/wp-content/uploads/2015/03/blank.jpg";
 
@@ -134,10 +135,19 @@ function printCorver($numero_id, $title ) {
     <?php
 }
 
+function printLargeCorver($numero_id, $title) {
+    __printCorver($numero_id, $title, 'full');
+}
+
+function printMediumCorver($numero_id, $title) {
+    __printCorver($numero_id, $title, 'medium');
+}
+
+
 class NumeroWidget extends WP_Widget {
-    function NumeroWidget()
+    public function __construct()
     {
-        parent::WP_Widget(false, $name = 'MW - Widget Numéros', array("description" => 'Affiche la couverture du dernier numéro'));
+        parent::__construct(false, $name = 'MW - Widget Numéros', array("description" => 'Affiche la couverture du dernier numéro'));
     }
 
     function widget( $args, $instance )
@@ -152,7 +162,7 @@ class NumeroWidget extends WP_Widget {
         $list_num = get_terms( "numero" );
         $current  = $list_num[ count( $list_num ) -1 ];
 
-        printCorver( $current->term_id, $title );
+        printLargeCorver( $current->term_id, $title );
     }
 
     function update($new_instance, $old_instance)
@@ -176,18 +186,17 @@ class NumeroWidget extends WP_Widget {
 
     }
 }
-//add_action('widgets_init', create_function('', 'return register_widget("NumeroWidget");'));
 add_action('widgets_init', function () {
-    return register_widget("NumeroWidget");
+    register_widget("NumeroWidget");
 });
 
 
 
 
 class CeNumeroWidget extends WP_Widget {
-    function CeNumeroWidget()
+    function __construct()
     {
-        parent::WP_Widget(false, $name = 'MW - Widget Ce Numéro', array("description" => 'Affiche la couverture du numéro en cours'));
+        parent::__construct(false, $name = 'MW - Widget Ce Numéro', array("description" => 'Affiche la couverture du numéro en cours'));
     }
 
     function widget($args, $instance)
@@ -202,7 +211,7 @@ class CeNumeroWidget extends WP_Widget {
 		$numeros = get_the_terms( $post_id, "numero");
 		if ( ! empty( $numeros )) {
             $numero = array_pop($numeros);
-            printCorver( $numero->term_id, $title );
+            printLargeCorver( $numero->term_id, $title );
         }
     }
 
@@ -226,14 +235,13 @@ class CeNumeroWidget extends WP_Widget {
 			</p><?php
     }
 }
-// add_action('widgets_init', create_function('', 'return register_widget("CeNumeroWidget");'));
 add_action('widgets_init', function () {
-    return register_widget("CeNumeroWidget");
+    register_widget("CeNumeroWidget");
 });
 
 
 
-    /**
+/**
  * Dossiers
  */
 function dossier_init() {
@@ -476,7 +484,7 @@ function wp_abo_menu_render()
 					SELECT @id := LAST_INSERT_ID();\n
 					INSERT INTO wp_usermeta (user_id, meta_key, meta_value) VALUES (@id,'numero','".intval(trim($ligne['0']))."');\n
 					INSERT INTO wp_pmpro_memberships_users VALUES ('',@id,1,0,0,0,0,'Month',0,0,0,'".$status."',NOW(),'".$dateexp."',NOW());";
-					$wpdb->get_results(query);
+					$wpdb->get_results($query); // PJD, pas un bug ça ?
 				}
 			} // Fin de la boucle
 
@@ -661,8 +669,6 @@ function pjd_log( $msg ) {
 
 function do_remove_abonnement_category() {
 
-    // pjd_log( "Dans trigger" );
-
     // Calcule le jour de l'annee precedente
     $lastYearTime = strtotime( date( "Y-m-d", time() ) . " - 1 year" );
     $lastYear = date( 'Y-m-d 23:59:59', $lastYearTime );
@@ -703,8 +709,6 @@ function do_remove_abonnement_category() {
     // Lancement de la recherche
     $query = new WP_Query( $criteria );
 
-    // pjd_log( "Nombre d'article: " . $query->post_count );
-
     // Parcours des articles trouves
     foreach ( $query->posts as $post ) {
         // Pour chaque article trouve, suppression de la categorie "abonnement". --> L'article est alors disponible pour tout a chacun.
@@ -713,20 +717,14 @@ function do_remove_abonnement_category() {
 
     // On reinitialise a la requete principale (important)
     wp_reset_postdata();
-
-    // pjd_log( "Sortie trigger" );
 }
 add_action( 'remove_abonnement_event', 'do_remove_abonnement_category' );
 
 function set_remove_abonnement_event_trigger() {
     $timestamp = wp_next_scheduled( 'remove_abonnement_event' );
     if ( ! $timestamp ) {
-        $timestamp = wp_schedule_event( strtotime( '00:00:00' ), 'daily', 'remove_abonnement_event' );
-    } else {
-        // unset_remove_abonnement_event_trigger(); echo " | desactive";
+        wp_schedule_event( strtotime( '00:00:00' ), 'daily', 'remove_abonnement_event' );
     }
-
-    // pjd_log( "Installation: " . $timestamp );
 }
 
 function unset_remove_abonnement_event_trigger() {
@@ -739,5 +737,3 @@ set_remove_abonnement_event_trigger();
  * PJD: END - Trigger pour rendre public les articles de plus d'une annee reserves aux abonnes
  *-----------------------------------------------------------------------------------
  */
-
-?>
