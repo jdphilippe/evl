@@ -30,7 +30,20 @@ tie_breadcrumbs();
             }
         */
 
-            $all_users = get_users("orderby=display_name");
+            $users = get_users();
+            $all_users = [];
+
+            foreach ($users as $user) {
+                $firstName = get_user_meta($user->ID, 'first_name', true);
+                $lastName  = get_user_meta($user->ID, 'last_name', true);
+                if ($firstName == "" || $lastName == "")
+                    continue;
+
+                $all_users[ $lastName ] = $user;
+            }
+
+            ksort($all_users);
+
             foreach ($all_users as $user) {
                 if ( intval( count_user_posts($user->ID, 'post', true) ) == 0 )
                     continue; ?>
