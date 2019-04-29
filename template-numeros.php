@@ -49,14 +49,13 @@ get_header();
 
 					    $list_num = get_terms( "numero" );
 
-						$arrayDate = array();
-						foreach ($list_num as $this_num) {
-							$numoptions = get_option('taxonomy_'.$this_num->term_id);
-							$date = $numoptions['nb_date_field_id'];
-							$arrayDate[] = $date;
+                        $list_int_num = array();
+						foreach ( $list_num as $this_num ) {
+						    $numeroObject = get_term_by('id',$this_num->term_id,'numero');
+						    $list_int_num[] = (INT) $numeroObject->slug;
 						}
 
-						array_multisort($arrayDate, $list_num);
+                        array_multisort($list_int_num, $list_num);
 						$list_num = array_reverse($list_num);
 						$i = 0;
 						foreach ($list_num as $this_num) {
@@ -75,23 +74,6 @@ get_header();
 								<?php
 
                                 printMediumCorver($numeroid, null);
-/*
-								if( ( $category_image = category_image_src( array('term_id' => $numeroid, 'size' =>  'medium' )  , false ) ) != null ){
-									echo '<a href="'.esc_url($link).'"><img src="'.$category_image.'" alt="'.$numero->name.'" class="attachment-medium"></a>';
-								} else {
-									echo '<a href="'.esc_url($link).'"><img src="/wordpress/wp-content/uploads/2015/03/blank.jpg" alt="'.$numero->name.'" class="attachment-medium"></a>';
-								}
-								?>
-								<h4 class="sommaires"><a href="<?php echo esc_url($link); ?>"><?php echo $name; ?></a></h4>
-
-								<p><a href="<?php echo esc_url($link); ?>"><?php echo category_description($numeroid); ?></a></p>
-
-
-								<?php if(pmpro_hasMembershipLevel()){
-									$fid = get_tax_meta($numeroid,'nb_file_field_id');
-									print ("<center><a href='/wordpress/download.php?fid=".$fid[0]."&id=".$numeroid."'>T&eacute;l&eacute;charger le PDF</a></center>");
-								}
-*/
                                 ?>
 
 								</center>
