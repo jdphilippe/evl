@@ -12,6 +12,99 @@
 	Tags: two-columns, fixed-width, custom-background, threaded-comments, translation-ready, custom-menu
 ***************************************/
 
+/* PJD */
+
+.bt_don {
+	background: #ededed;
+	border: 1px solid #ccc;
+	padding: 8px 10px;
+	vertical-align: middle;
+	line-height: 1.2em;
+	font-size: 1em;
+	color: #333;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+}
+
+.bt_don:hover {
+    background-color: #dbdbdb;
+    color: black;
+}
+
+.bt_don_submit {
+	/* background: #cd2122; */
+	background: #9B2124;
+	border: 0;
+	padding: 6px 8px;
+	vertical-align: middle;
+	line-height: 17px;
+	font-size: 18px;
+	color: white;
+	transition: all 0.3s ease-in-out;
+	font-weight: bold;
+	display: inline-block;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+}
+
+.bt_don_submit:hover {
+    background: black;
+    color: white;
+}
+
+.ul_don {
+	list-style-type: none;
+	padding: 0;
+
+}
+
+.li_don {
+	float: left;
+	display: block;
+}
+
+.span_curr {
+	background-color: #f2f2f2;
+	border-left: 1px solid #ccc;
+	border-right: none;
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+	color: #333;
+	margin: 0;
+	padding: 0 12px;
+	height: 35px;
+	line-height: 35px;
+	font-size: 18px;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	float: left;
+}
+
+.input_don_value {
+	border: 1px solid #ccc;
+	background: #fff;
+	border-radius: 0;
+	height: 35px;
+	line-height: 35px;
+	padding: 0 12px;
+	margin: 0;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	min-width: 125px;
+	width: 125px;
+	color: black;
+}
+
+.input_don_value:valid {
+	background: #fff;
+}
+
+.input_don_value:invalid {
+	background: #a38043;
+}
+
 
 @font-face {
 	font-family: 'tiefontello';
