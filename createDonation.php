@@ -27,7 +27,7 @@ $objProduct->set_description("Don pour Evangile et liberté de " . $donation . "
 $objProduct->set_sku(""); //can be blank in case you don't have sku, but You can't add duplicate sku's
 $objProduct->set_price($donation); // set product price
 $objProduct->set_regular_price($donation); // set product regular price
-$objProduct->set_manage_stock(false); // true or false
+$objProduct->set_manage_stock(true); // true or false
 $objProduct->set_stock_quantity(1);
 $objProduct->set_stock_status('instock'); // in stock or out of stock value
 $objProduct->set_backorders('no');
@@ -39,7 +39,10 @@ $objProduct->set_virtual(true);
 
 $product_id = $objProduct->save(); // it will save the product and return the generated product id
 
+update_post_meta( $product_id, '_membership_product_autocomplete', true );
+
+
 WC()->cart->add_to_cart( $product_id );
 
-wp_redirect( get_permalink( wc_get_page_id('cart') ) );
+wp_redirect( get_permalink( wc_get_page_id('checkout') ) );
 exit();

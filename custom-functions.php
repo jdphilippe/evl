@@ -12,48 +12,61 @@ header( 'Strict-Transport-Security: max-age=0;' );
  * @author danielbachhuber
  */
 add_filter( 'posts_search', 'db_filter_authors_search' );
-function db_filter_authors_search( $posts_search ) {
+/**
+ * @param $posts_search
+ * @return string
+ */
+function db_filter_authors_search($posts_search ) {
 
 	// Don't modify the query at all if we're not on the search template
 	// or if the LIKE is empty
-	if ( !is_search() || empty( $posts_search ) )
+	if ( ! is_search() || empty( $posts_search ) )
 		return $posts_search;
 
 	global $wpdb;
+
 	// Get all of the users of the blog and see if the search query matches either
 	// the display name or the user login
 	add_filter( 'pre_user_query', 'db_filter_user_query' );
 	$search = sanitize_text_field( get_query_var( 's' ) );
-	$args = array(
-		'count_total' => false,
-		'search' => sprintf( '*%s*', $search ),
-		'search_fields' => array(
-			'display_name',
-			'user_login',
-		),
-		'fields' => 'ID',
-	);
+	$args = array (
+        'count_total'   => false,
+        'search'        => sprintf( '*%s*', $search ),
+        'search_fields' => array (
+            'display_name',
+            'user_login',
+        ),
+        'fields' => 'ID'
+    );
+
 	$matching_users = get_users( $args );
 	remove_filter( 'pre_user_query', 'db_filter_user_query' );
+
 	// Don't modify the query if there aren't any matching users
 	if ( empty( $matching_users ) )
 		return $posts_search;
+
 	// Take a slightly different approach than core where we want all of the posts from these authors
 	$posts_search = str_replace( ')))', ")) OR ( {$wpdb->posts}.post_author IN (" . implode( ',', array_map( 'absint', $matching_users ) ) . ")))", $posts_search )." AND {$wpdb->posts}.post_type IN ('post','page')";
 	return $posts_search;
 }
 /**
  * Modify get_users() to search display_name instead of user_nicename
+ * @param $user_query : ???
+ * @return la requete de recherche
  */
 function db_filter_user_query( &$user_query ) {
 
 	if ( is_object( $user_query ) )
 		$user_query->query_where = str_replace( "user_nicename LIKE", "display_name LIKE", $user_query->query_where );
+
 	return $user_query;
 }
 
 /**
  * Get custom image field for taxonomy
+ * @param $term_id
+ * @return
  */
 function tip_plugin_get_terms($term_id) {
  	$associations = taxonomy_image_plugin_get_associations();
@@ -62,6 +75,7 @@ function tip_plugin_get_terms($term_id) {
 	if ( array_key_exists( $tt_id, $associations ) ) {
 		$img_id = absint( $associations[$tt_id] );
 	}
+
 	return $img_id;
  }
 
@@ -82,7 +96,7 @@ function numero_init() {
 		'update_item'       => __( 'Mettre à jour le numéro' ),
 		'add_new_item'      => __( 'Ajouter un nouveau numéro' ),
 		'new_item_name'     => __( 'Nom du nouveau numéro' ),
-		'menu_name'         => __( 'Numéros' ),
+		'menu_name'         => __( 'Numéros' )
 	);
 
 	// create a new taxonomy
@@ -107,29 +121,41 @@ add_action( 'init', 'numero_init' );
  * @param $format
  */
 function __printCorver($numero_id, $title, $format) {
-    if ( $title )
-        echo $title;
+    if ( $title ) { ?>
+        <div class='widget-top'>
+          <h4> <?php echo $title ?> </h4>
+        </div>
+        <div class='stripe-line'></div>
+    <?php
+    }
 
     $numero = get_term_by('id', $numero_id, 'numero');
     $link   = esc_url( get_term_link((INT) $numero_id, 'numero') );
+    // $link   = get_site_url() . '/wp-content/themes/jarida/template-numero.php?numero=' . $numero->slug;
+
     ?>
-    <div class="mywidget">
-        <h3><a href="<?php echo $link ?>"><strong><?php echo $numero->name; ?></strong></a></h3>
-        <p><a  href="<?php echo $link ?>"><?php echo $numero->description; ?></a></p>
+    <div class='widget-container'>
+        <div class="mywidget">
+            <h3><a href="<?php echo $link ?>"><strong><?php echo $numero->name; ?></strong></a></h3>
+            <p><a  href="<?php echo $link ?>"><?php echo $numero->description; ?></a></p>
 
-        <?php
-        $category_image = category_image_src( array( 'term_id' => $numero->term_id, 'size' => "$format" ), false );
-        if ( $category_image == null )
-            $category_image = "/wordpress/wp-content/uploads/2015/03/blank.jpg";
+            <?php
+            $category_image = category_image_src( array( 'term_id' => $numero->term_id, 'size' => "$format" ), false );
+            if ( $category_image == null )
+                $category_image = get_site_url() . "/wp-content/uploads/2015/03/blank.jpg";
 
-        echo '<center><a href="'. $link .'"><img src="' . $category_image . '" alt="' . $numero->name . '" class="img-responsive wp-post-image numcover"></a></center>';
+            echo '<center><a href="'. $link .'"><img src="' . $category_image . '" alt="' . $numero->name . '" class="img-responsive wp-post-image numcover"></a></center>';
 
-        if ( pmpro_hasMembershipLevel() ) {
-            $fid = get_tax_meta( $numero_id, 'nb_file_field_id' );
-            echo "<center><a href='/wordpress/download.php?fid=" . $fid[0] . "&id=" . $numero_id . "'>Télécharger le PDF</a></center>";
-        } else {
-            echo "<center>Vous devez avoir un abonnement actif pour télécharger le numéro</center>";
-        } ?>
+            if ( pmpro_hasMembershipLevel() ) {
+                $fid = get_tax_meta( $numero_id, 'nb_file_field_id' );
+                if ($fid[0] == '')
+                    echo "<center>Pas de PDF</center>";
+                else
+                    echo "<center><a href='/wordpress/download.php?fid=" . $fid[0] . "&id=" . $numero_id . "'>Télécharger le PDF</a></center>";
+            } else {
+                echo "<center>Vous devez avoir un abonnement actif pour télécharger le numéro</center>";
+            } ?>
+        </div>
     </div>
     <br>
     <?php
@@ -190,15 +216,68 @@ add_action('widgets_init', function () {
     register_widget("NumeroWidget");
 });
 
+class JourneesWidget extends WP_Widget {
+    function __construct() {
+        parent::__construct(false, $name = 'PJD - Widget Journees', array("description" => 'Affiche les articles en rapport avec les Journées EvL'));
+    }
 
+    public function widget($args, $instance)
+    {
+        $width  = 78;
+        $height = 52;
+
+        $criteria = [
+            "post_type" => "post",
+            "tax_query" => [
+                [
+                    "taxonomy" => "category",
+                    "field"    => "slug",
+                    "terms"    => "journees-" . date("Y") // Format à respecter: journees-YYYY
+                ]
+            ],
+            "orderby"        => "post_date",
+            "order"          => "DESC",
+            "post_status"    => "publish",
+            'posts_per_page' => '-1'
+        ];
+
+        // Lancement de la recherche
+        $the_query = new WP_Query($criteria);
+        if ( $the_query->found_posts == 0 )
+            return; // On est en debut d'année, pas d'article, on sort
+
+        $post = $the_query->posts[0];
+
+        $title = get_the_title($post->ID);
+        $image = get_the_post_thumbnail_url( $post->ID, [ $width, $height ] );
+        $link  = get_post_permalink($post->ID);
+
+        $html  = "<div class='widget-top'>";
+        $html .= "  <h4>" . $title . "</h4>";
+        $html .= "</div>";
+        $html .= "<div class='stripe-line'></div>";
+        $html .= "<div class='widget-container'>";
+        $html .= "  <a href='" . $link . "' title='" . $title . "'>";
+        $html .= "    <img src='" . $image . "'/>";
+        $html .= "  </a>";
+        $html .= "</div><br>";
+
+        echo $html;
+    }
+}
+add_action('widgets_init', function () {
+    register_widget("JourneesWidget");
+});
 
 
 class CeNumeroWidget extends WP_Widget {
+
     function __construct()
     {
         parent::__construct(false, $name = 'MW - Widget Ce Numéro', array("description" => 'Affiche la couverture du numéro en cours'));
     }
 
+    // contient la sortie du widget
     function widget($args, $instance)
     {
         // Extraction des paramètres du widget
@@ -215,14 +294,18 @@ class CeNumeroWidget extends WP_Widget {
         }
     }
 
+    // met à jour les paramètres du plugin
     function update($new_instance, $old_instance)
     {
         $instance = $old_instance;
 		/* Récupération des paramètres envoyés */
 		$instance['title'] = strip_tags($new_instance['title']);
 		$instance['numeroid'] = $new_instance['numeroid'];
+
 		return $instance;
     }
+
+    // détermine les paramètres du widget dans le tableau de bord WordPress
     function form($instance)
     {
         $title = esc_attr($instance['title']);
@@ -232,7 +315,8 @@ class CeNumeroWidget extends WP_Widget {
 					<?php _e('Title:'); ?>
 					<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>" />
 				</label>
-			</p><?php
+			</p>
+        <?php
     }
 }
 add_action('widgets_init', function () {
@@ -308,8 +392,7 @@ function my_save_extra_profile_fields( $user_id ) {
 	if ( !current_user_can( 'edit_user', $user_id ) )
 		return false;
 
-	/* Copy and paste this line for additional fields. Make sure to change 'twitter' to the field ID. */
-	update_usermeta( $user_id, 'numero', $_POST['numero'] );
+	update_user_meta( $user_id, 'numero', $_POST['numero'] );
 }
 
 add_action( 'admin_menu', 'wp_abo_menu_register' );
@@ -403,7 +486,6 @@ function wp_abo_menu_render()
 		{
 			for($i = $x; $i <= $fin; $i++)
 			{ // Départ de la boucle
-				$ref = '';
 				$mydate = date("Y-m-d",strtotime(date("Y-m-01", strtotime(date("Y-m-d"))) . " +1 month"));
 
 				$reqsql = "SELECT MAX(id) FROM abonne_papier";
@@ -532,6 +614,7 @@ function wp_abo_menu_render()
 function inscription_form( $atts ){
 	global $wpdb;
 	$msg = "";
+    $content = "";
 	if (isset($_POST['sinscrire'])) {
 		if (!is_email($_POST['email'])) {
 			$msg .= "<p><strong>Vous devez introduire une adresse email correcte</strong></p><p>&nbsp;</p>";
@@ -587,66 +670,56 @@ function inscription_form( $atts ){
 			$content = "Votre compte a &eacute;t&eacute; cr&eacute;&eacute;. Vous pouvez d&egrave;s &agrave; pr&eacute;sent vous connecter gr&acirc;ce &agrave; votre ".$identifiant." et votre mot de passe.";
 		}
 	}
-	if (!isset($_POST['sinscrire']) || $msg != ""){
+
+	if (! isset($_POST['sinscrire']) || $msg != ""){
 		$content = "";
 		$content .= $msg."
-	<form method='post' enctype='multipart/form-data' action=''>
-	<table class='form-table'>
-
-		<tr>
-			<th><label for='lastname'>Nom*</label></th>
-
-			<td>
-				<input type='text' name='lastname' id='name' value='' class='regular-text' />
-			</td>
-			<td></td>
-		</tr>
-
-		<tr>
-			<th><label for='firstname'>Pr&eacute;nom*</label></th>
-
-			<td>
-				<input type='text' name='firstname' id='firstname' value='' class='regular-text' />
-			</td>
-			<td></td>
-		</tr>
-
-		<tr>
-			<th><label for='email'>E-mail*</label></th>
-
-			<td>
-				<input type='text' name='email' id='email' value='' class='regular-text' />
-			</td>
-			<td></td>
-		</tr>
-
-		<tr>
-			<th><label for='email'>Mot de passe*</label></th>
-
-			<td>
-				<input type='password' name='password' id='password' value='' class='regular-text' />
-			</td>
-			<td></td>
-		</tr>
-
-		<tr>
-			<th><label for='numero'>Num&eacute;ro d'abonn&eacute;</label></th>
-
-			<td>
-				<input type='text' name='numero' id='numero' value='' class='regular-text' />
-			</td>
-			<td>
-				<span class='description'>Si vous poss&eacute;dez un num&eacute;ro d'abonn&eacute;, veuillez l'indiquer ici.</span>
-			</td>
-		</tr>
-
-	</table>
-	<br><br>
-	<center><input type='submit' name='sinscrire' value='Cr&eacute;er mon compte' /></center>
-	</form>";
+        <form method='post' enctype='multipart/form-data' action=''>
+        <table class='form-table'>
+            <tr>
+                <th><label for='lastname'>Nom*</label></th>
+                <td>
+                    <input type='text' name='lastname' id='name' value='' class='regular-text' />
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <th><label for='firstname'>Pr&eacute;nom*</label></th>
+                <td>
+                    <input type='text' name='firstname' id='firstname' value='' class='regular-text' />
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <th><label for='email'>E-mail*</label></th>
+                <td>
+                    <input type='text' name='email' id='email' value='' class='regular-text' />
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <th><label for='email'>Mot de passe*</label></th>
+                <td>
+                    <input type='password' name='password' id='password' value='' class='regular-text' />
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <th><label for='numero'>Num&eacute;ro d'abonn&eacute;</label></th>
+                <td>
+                    <input type='text' name='numero' id='numero' value='' class='regular-text' />
+                </td>
+                <td>
+                    <span class='description'>Si vous poss&eacute;dez un num&eacute;ro d'abonn&eacute;, veuillez l'indiquer ici.</span>
+                </td>
+            </tr>
+        </table>
+        <br><br>
+        <center><input type='submit' name='sinscrire' value='Cr&eacute;er mon compte' /></center>
+        </form>";
 	}
-		return $content;
 
+	return $content;
 }
 add_shortcode( 'inscription', 'inscription_form' );
 
@@ -710,9 +783,11 @@ function do_remove_abonnement_category() {
     $query = new WP_Query( $criteria );
 
     // Parcours des articles trouves
+    $at_home = is_dir("/home/jd");
     foreach ( $query->posts as $post ) {
-        // Pour chaque article trouve, suppression de la categorie "abonnement". --> L'article est alors disponible pour tout a chacun.
-        wp_remove_object_terms( $post->ID, "abonnement", "category" );
+        // Pour chaque article trouve, suppression de la categorie "abonnement". --> L'article est alors disponible pour tout le monde.
+        if (! $at_home) // Pour ne pas le faire chez moi
+            wp_remove_object_terms( $post->ID, "abonnement", "category" );
     }
 
     // On reinitialise a la requete principale (important)
@@ -737,3 +812,20 @@ set_remove_abonnement_event_trigger();
  * PJD: END - Trigger pour rendre public les articles de plus d'une annee reserves aux abonnes
  *-----------------------------------------------------------------------------------
  */
+
+// Ajoute le lien pour faire des dons en bas de page
+function wpb_after_post_content( $content ) {
+    if ( is_single() ) {
+        $html = "" .
+            "<div class='widget-top'>" .
+            "<h4 style='margin-bottom: 1px'>Don</h4>" .
+            "</div>" .
+            "<div class='stripe-line'></div>" .
+            "<p style='padding-top: 10px'>Pour faire un don, suivez ce <b><a href='" . get_home_url() . "/index.php/don-entete/'>lien</a></b></p>";
+
+        $content .= $html;
+    }
+
+    return $content;
+}
+add_filter( "the_content", "wpb_after_post_content" );
