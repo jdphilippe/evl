@@ -104,11 +104,20 @@ tie_breadcrumbs();
             function onBlur(e) {
                 e.target.value = toLocalCurrency(e.target.value);
             }
+
+            openDonationForm = function () {
+                window.open("https://donner.fondationduprotestantisme.org/b?cid=32&lang=fr_FR", "_blank");
+            };
         });
     })(window, jQuery);
-
 </script>
 
+<style>
+    .div-fiscal {
+        border: thin solid black;
+        padding: 5px;
+    }
+</style>
 <br>
 
 <div class="content-wrap">
@@ -121,15 +130,29 @@ tie_breadcrumbs();
             echo apply_filters( 'the_content', $header_donation_page->post_content );
         ?>
         <br>
-        <form id="form_don" name="form_don" method="POST" action="<?php echo $url_create_donnation ?>">
-            <span class="span_curr">€</span>
-            <label for="input_don"></label>
-            <input type="text" value="5,00 €" id="input_don" name="input_don" class="input_don_value" style="color: black; font: 20px Arial" required />
-        </form>
+        Vous avez <strong>deux manières</strong> de procéder:<br><br>
+        <div id="avecRecu" class="div-fiscal">
+            Si vous souhaitez bénéficier <b><a target="_blank" href="https://www.impots.gouv.fr/portail/particulier/questions/jai-fait-des-dons-une-association-que-puis-je-deduire">d'un reçu fiscal</a></b>, vous pouvez utiliser le formulaire mis à disposition sur le site de la <b><a target="_blank" href="https://fondationduprotestantisme.org/">Fondation du Protestantisme</a></b>.<br>
+            Prennez bien soin de selectionner le projet "EVANGILE ET LIBERTE" dans la liste en haut à gauche, comme sur l'image ci-dessous :<br>
+            <div style="text-align: center;"><img src="https://www.evangile-et-liberte.net/wordpress/wp-content/uploads/2019/12/formulaireDon.png"></div>
+            <br><br>
+            <button type="button" class="bt_don_submit" onclick="openDonationForm();" title="Régler le don">Avec reçu fiscal</button>
+        </div>
+        <br>
+        <div id="sansRecu" class="div-fiscal">
+            Si vous n'avez pas besoin d'un reçu fiscal, vous pouvez utiliser le formulaire suivant:<br><br>
+            <form id="form_don" name="form_don" method="POST" action="<?php echo $url_create_donnation ?>">
+                <span class="span_curr">€</span>
+                <label for="input_don"></label>
+                <input type="text" value="5,00 €" id="input_don" name="input_don" class="input_don_value" style="color: black; font: 20px Arial" required />
+            </form>
 
-        <ul id="ul_form" style="list-style: none; padding-top: 10px; padding-bottom: 20px" ></ul>
+            <ul id="ul_form" style="list-style: none; padding-top: 10px; padding-bottom: 20px" ></ul>
 
-        <button type="button" class="bt_don_submit" onclick="submitDonationForm();">Régler votre don</button>
+            <button type="button" class="bt_don_submit" onclick="submitDonationForm();" title="Régler le don">Sans reçu fiscal</button>
+        </div>
+    </div>
+</div>
 
 <?php get_sidebar(); ?>
-<?php get_footer(); ?>
+<?php get_footer();
