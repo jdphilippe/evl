@@ -795,10 +795,16 @@ function do_remove_abonnement_category() {
 }
 add_action( 'remove_abonnement_event', 'do_remove_abonnement_category' );
 
-function set_remove_abonnement_event_trigger() {
-    $timestamp = wp_next_scheduled( 'remove_abonnement_event' );
+function remove_fake_donation() {
+
+}
+add_action( 'remove_fake_donation_event', 'remove_fake_donation' );
+
+
+function set_crontab_event_trigger( $trigger ) {
+    $timestamp = wp_next_scheduled( $trigger );
     if ( ! $timestamp ) {
-        wp_schedule_event( strtotime( '00:00:00' ), 'daily', 'remove_abonnement_event' );
+        wp_schedule_event( strtotime( '00:00:00' ), 'daily', $trigger );
     }
 }
 
@@ -806,7 +812,8 @@ function unset_remove_abonnement_event_trigger() {
     wp_clear_scheduled_hook( 'remove_abonnement_event' );
 }
 
-set_remove_abonnement_event_trigger();
+set_crontab_event_trigger('remove_abonnement_event');
+set_crontab_event_trigger('remove_fake_donation_event');
 
 /*-----------------------------------------------------------------------------------
  * PJD: END - Trigger pour rendre public les articles de plus d'une annee reserves aux abonnes

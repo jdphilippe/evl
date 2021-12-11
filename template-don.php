@@ -131,10 +131,18 @@ tie_breadcrumbs();
         ?>
         <br>
         Vous avez <strong>deux manières</strong> de procéder:<br><br>
-        <div id="avecRecu" class="div-fiscal">
-            Si vous souhaitez bénéficier <b><a target="_blank" href="https://www.impots.gouv.fr/portail/particulier/questions/jai-fait-des-dons-une-association-que-puis-je-deduire">d'un reçu fiscal</a></b>, vous pouvez utiliser le formulaire mis à disposition sur le site de la <b><a target="_blank" href="https://fondationduprotestantisme.org/">Fondation du Protestantisme</a></b>.<br>
-            Prennez bien soin de selectionner le projet "EVANGILE ET LIBERTE" dans la liste en haut à gauche, comme sur l'image ci-dessous :<br>
-            <div style="text-align: center;"><img src="https://www.evangile-et-liberte.net/wordpress/wp-content/uploads/2019/12/formulaireDon.png"></div>
+        <div id="avecRecu" class="div-fiscal"  >
+            Si vous souhaitez bénéficier <b><a target="_blank" href="https://www.impots.gouv.fr/portail/particulier/questions/jai-fait-des-dons-une-association-que-puis-je-deduire">d'un reçu fiscal</a></b>, vous pouvez utiliser le bouton rouge ci-dessous "Avec reçu fiscal"</b>.<br>
+            Prennez bien soin de :
+            <ol>
+                <li>1) <b>Sélectionner</b> le projet "EVANGILE ET LIBERTE" dans la liste en haut à gauche</li>
+                <li>2) <b>Décocher</b> la case de changement d'affectation de votre don, comme sur l'image ci-dessous :</li>
+            </ol>
+            <div style="text-align: center;">
+            <img src="https://www.evangile-et-liberte.net/wordpress/wp-content/uploads/2019/12/formulaireDon.png" />
+            <br>
+            <img src="https://www.evangile-et-liberte.net/wordpress/wp-content/uploads/2021/12/don_cb.png" />
+            </div>
             <br><br>
             <button type="button" class="bt_don_submit" onclick="openDonationForm();" title="Régler le don">Avec reçu fiscal</button>
         </div>
@@ -156,3 +164,4 @@ tie_breadcrumbs();
 
 <?php get_sidebar(); ?>
 <?php get_footer();
+
